@@ -71,6 +71,7 @@
 using namespace BioFVM; 
 using namespace PhysiCell;
 
+
 // setup functions to help us along 
 
 void create_cell_types( void );
@@ -88,7 +89,7 @@ std::vector<std::string> my_coloring_function( Cell* );
 void phenotype_function( Cell* pCell, Phenotype& phenotype, double dt );
 void custom_function( Cell* pCell, Phenotype& phenotype , double dt );
 void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& phenoOther , double dt ); 
-
+std::vector<double> find_nearest_point(Cell* pCell_me, Cell* pCell_neighbor, int number_of_test_points);
 void custom_velocity_function( Cell* pCell, Phenotype& phenotype , double dt );
 void custom_assign_orientation(Cell* pCell, Phenotype& phenotype, double dt );
 void custom_update_cell_velocity( Cell* pCell, Phenotype& phenotype, double dt);

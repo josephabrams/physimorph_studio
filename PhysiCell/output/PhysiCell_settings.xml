@@ -225,6 +225,9 @@
           <cx units="um" conserved="false" description="">0.0</cx>
           <cy units="um" conserved="false" description="">0.0</cy>
           <cz units="um" conserved="false" description="">0.0</cz>
+          <ang_vel_x units="um/s" conserved="false" description="">0.0</ang_vel_x>
+          <ang_vel_x units="um/s" conserved="false" description="">0.0</ang_vel_x>
+          <ang_vel_x units="um/s" conserved="false" description="">0.0</ang_vel_x>
           <rotation_about_z_axis units="um" conserved="false" description="">0.0</rotation_about_z_axis>
         </custom_data>
       </cell_definition>
@@ -372,6 +375,9 @@
           <cy units="um" conserved="false" description="">0.0</cy>
           <cz units="um" conserved="false" description="">0.0</cz>
           <rotation_about_z_axis units="um" conserved="false" description="">0.0</rotation_about_z_axis>
+          <ang_vel_x units="um/s" conserved="false" description="">0.0</ang_vel_x>
+          <ang_vel_x units="um/s" conserved="false" description="">0.0</ang_vel_x>
+          <ang_vel_x units="um/s" conserved="false" description="">0.0</ang_vel_x>
         </custom_data>
       </cell_definition>
 

@@ -66,6 +66,9 @@
 */
 
 #include "./custom.h"
+#include <vector>
+#include <cmath>
+#include <algorithm>
 
 static double four_thirds_pi =  4.188790204786391;
 // ellipse radius
@@ -354,18 +357,201 @@ void transform_by_matrix( std::vector<std::vector<double>> ellipsoid,int mode=0)
 	// mode 2, translate
 	return;
 }
-void neighbor_interaction(Cell *pCell_v, Cell* pCell_c)
+std::vector<double> cross_product(std::vector <double> a, std::vector <double> b)
 {
-	//get point(s) of intersection- if just 1 easy, if 2...
-	//deepest point is furthest point into v on c that is between points of intersection
-	//make vector that goes from pCell_c center through deepest point
-	//calculate force and add it along that vector
-	//component of force along the long axis is translation
-	//component of force in other 2 cardinals do rotation
+	std::vector<double> cross_vector={a[1]*b[2]-a[2]*b[1],(-1)*a[0]*b[2]-a[2]*b[0],(-1)*a[0]*b[1]-a[1]*b[0]};
+	return cross_vector;
+}
+std::vector<double> linear_velocity_to_force(Cell* pCell)
+{
+	//can be adjusted to whatever atm just does a linear proportional approximation
+	//
+	return pCell->velocity;
+}
+void angular_velocity_to_force()
+{
+ return;
+}
+void custom_data_to_vector()
+{
+	return;
+}
+void vector_to_custom_data()
+{
+	return;
+}
+double longest_axis_distance(std::vector<double> v1)
+{
+	std::vector<double>::iterator longest_component;
+	longest_component=std::max_element(v1.begin(), v1.end());
+	return *longest_component;
+}
+std::string longest_axis(std::vector<double> v1)
+{
+	std::string axis="";
+	std::vector<double>::iterator longest_component;
+	longest_component=std::max_element(v1.begin(), v1.end());
+	int location=std::distance(v1.begin(), longest_component);
+	if (location == 0){
+		axis="axis_x";
+	}
+	else if(location==1){
+		axis="axis_y";
+	}
+	else if(location==2){
+		axis="axis_z";
+	}
+	else
+	{
+		std::cout<<"vector size error"<<std::endl;
+	}
+	return axis;
+}
+double dot_product(std::vector <double> v1, std::vector <double> v2 )
+{	
+	double out=0.0;
+	if(v1.size()!=v2.size())
+	{
+		std::cout<<"NOOOOOOO bad vectors"<<"\n";
+	}
+	else{
+ 	for( unsigned int i=0 ; i < v1.size() ; i++ )
+ 		{ out += ( v1[i] * v2[i] ); }
+	}
+	return out;
+}
+void neighbor_interaction(Cell* pCell_me, Cell* pCell_neighbor)
+{
+	std::vector<double> my_force_vector_direction (3,0.0);
+	std::vector<double> neigh_force_vector_direction (3,0.0);
+	std::vector<double> my_nearest_point (3,0.0);
+	std::vector <double> neigh_nearest_point(3,0.0);
+	std::vector<double> nearest_points(3,0.0);
+	std::vector<double> torque(3,0.0);
+	std::vector<double> translate(3,0.0);
+	std::vector<double> linear_force(3,0.0);
+	std::vector<double> tangential_force(3,0.0);
+	std::vector<double> angular_velocity(3,0.0);
+	std::vector<double> neigh_net_force(3,0.0);
+	nearest_points=find_nearest_point(pCell_me,pCell_neighbor, 8);
+	for(int i=0;i<3;i++)
+	{
+		my_nearest_point[i]=nearest_points[i];
+		neigh_nearest_point[i]=nearest_points[i+3];
+	}
+	
+	my_force_vector_direction=my_nearest_point-pCell_me->position;
+	neigh_force_vector_direction=neigh_nearest_point-pCell_neighbor->position;
+	linear_force=pCell_neighbor->velocity*neigh_force_vector_direction;
+	
+	tangential_force=longest_axis_distance(neigh_force_vector_direction)*angular_velocity;//must be double*vector for operator overload in bioFVM
+	neigh_net_force=linear_force+tangential_force;
+	neigh_net_force=(longest_axis_distance(my_force_vector_direction)/pCell_me->custom_data[longest_axis(my_force_vector_direction)])*neigh_net_force;//scale by distance from center
+	//velocity_to_force(pCell_neighbor); for future
+	torque=cross_product(my_force_vector_direction,neigh_net_force);
+	//net torque=dL/dt=(moment of inertia)(angular acceleration)+2r(radiaul component of linear momentum)(angular velocity)
+	translate= (1-longest_axis_distance(my_force_vector_direction)/pCell_me->custom_data[longest_axis(my_force_vector_direction)])*(linear_force+tangential_force);
+	
+
+
 	return;
 
 }
+double deg_to_rad(double degrees)
+{
+	double radians = degrees*3.14159/180;
+	return radians;
+}
+std::vector<double> find_nearest_point(Cell* pCell_me, Cell* pCell_neighbor, int number_of_test_points)
+{
+	/*
+	TODO: make this use radians
+	code takes in two cells and a number of points along each cell to compare for distance, outputs a vector containing {x1,y1,z1,x2,y2,z2} where 1 is my cell and 2 is neighboor cell
 
+	*/
+
+	std::vector<double> test_point_positions(3,0.0);
+	std::vector<std::vector<double>> my_test_points(number_of_test_points,test_point_positions);
+	std::vector<std::vector<double>> neigh_test_points(number_of_test_points,test_point_positions);
+	double my_x_axis_radius = pCell_me->custom_data["axis_x"]/2;
+	double my_y_axis_radius = pCell_me->custom_data["axis_x"]/2;
+	double current_radians=0.0;
+	double neigh_x_axis_radius = pCell_neighbor->custom_data["axis_x"]/2;
+	double neigh_y_axis_radius = pCell_neighbor->custom_data["axis_x"]/2;
+
+	double degrees=360.0/number_of_test_points;
+	for(int i=0; i<number_of_test_points; i++) {
+		for(int j=0;j<3;j++)
+		{
+			current_radians=deg_to_rad(degrees*i);
+			// loop through and make test points at ellipoisdal boundary just do 2D for now with y=0.0
+			my_test_points[i][j]= my_x_axis_radius*std::cos(current_radians)+pCell_me->position[0];
+			my_test_points[i][j]= my_y_axis_radius*std::sin(current_radians)+pCell_me->position[1];
+			// make test points for neighbor, slow and repetative, this should maybe? be done as part of the cell_custom_rules and stored as a vector component of the cell
+			neigh_test_points[i][j]= neigh_x_axis_radius*std::cos(current_radians)+pCell_neighbor->position[0];
+			neigh_test_points[i][j]= neigh_y_axis_radius*std::sin(current_radians)+pCell_neighbor->position[1];
+		}
+		
+
+	}
+
+
+
+	std::vector<double>nearest_points (6,0.0);
+	std::vector<double>my_nearest_point (3,0.0);
+	std::vector<double>neigh_nearest_point (3,0.0);
+	//compare points at 45 degrees around cell membrane and find the closest on me and my neighboor
+	//compare x position
+	if(pCell_me->position[0]== pCell_neighbor->position[0] && pCell_me->position[2]== pCell_neighbor->position[2])
+	{	// same height check left or right
+		if(pCell_me->position[0]<pCell_neighbor->position[0])
+		{// I am left so nearest point is right
+			my_nearest_point=pCell_me->position+(pCell_me->custom_data["axis_y"]/2);
+			neigh_nearest_point=pCell_neighbor->position-(pCell_neighbor->custom_data["axis_y"]/2);
+		}
+		else
+		{//I am right so nearest point is left
+			my_nearest_point=pCell_me->position-(pCell_me->custom_data["axis_y"]/2);
+			neigh_nearest_point=pCell_neighbor->position+(pCell_neighbor->custom_data["axis_y"]/2);
+		}
+
+	}
+	/*  Eventually speed this up with more of the quick check positions
+	if(pCell_me->position[0]+pCell_me->custom_data["axis_a"] > pCell_neighbor->position[0]+pCell_neighbor->custom_data["axis_a"])
+	{	// I am above my nieghboor check my bottom 3 points
+
+
+	}
+	else if 
+	*/
+	std::vector<double> disp_vector(3,0.0);
+	double smallest_displacement=norm(pCell_me->position-pCell_neighbor->position);
+	for(int i=0; i<number_of_test_points; i++) {
+		std::vector<double>temp_point_1=my_test_points[i];
+		for (int j=0; j<number_of_test_points; j++)
+		{
+			
+			std::vector<double>temp_point_2=neigh_test_points[j];
+			disp_vector=temp_point_1-temp_point_2;
+			double displacement_between_test_points=norm(disp_vector);
+			if (displacement_between_test_points< smallest_displacement)
+			{	
+				smallest_displacement=displacement_between_test_points;
+				my_nearest_point=temp_point_1;
+				neigh_nearest_point=temp_point_2;
+			}
+		}
+		
+		
+	}
+	nearest_points[0]=my_nearest_point[0];
+	nearest_points[1]=my_nearest_point[1];
+	nearest_points[2]=my_nearest_point[2];
+	nearest_points[3]=neigh_nearest_point[0];
+	nearest_points[4]=neigh_nearest_point[1];
+	nearest_points[5]=neigh_nearest_point[2];
+	return nearest_points;
+}
 /*void find_longest_axis(Cell* pCell)
 {
 

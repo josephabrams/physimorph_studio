@@ -173,7 +173,7 @@ class Cell : public Basic_Agent
 	Cell_Parameters parameters;
 	Cell_Functions functions; 
 
-	Cell_State state; 
+	Cell_State state;
 	Phenotype phenotype; 
 	
 	void update_motility_vector( double dt_ );

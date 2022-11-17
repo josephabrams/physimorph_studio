@@ -27,9 +27,9 @@
 		</software>
 		<citation />
 		<current_time units="min">220.000000</current_time>
-		<current_runtime units="sec">3.994093</current_runtime>
-		<created>2022-10-26T00:48:30Z</created>
-		<last_modified>2022-10-26T00:48:30Z</last_modified>
+		<current_runtime units="sec">1.428869</current_runtime>
+		<created>2022-11-17T22:06:13Z</created>
+		<last_modified>2022-11-17T22:06:13Z</last_modified>
 	</metadata>
 	<microenvironment>
 		<domain name="microenvironment">
@@ -134,7 +134,8 @@
 							<label index="85" size="1" units="um">cx</label>
 							<label index="86" size="1" units="um">cy</label>
 							<label index="87" size="1" units="um">cz</label>
-							<label index="88" size="1" units="um">rotation_about_z_axis</label>
+							<label index="88" size="1" units="um/s">ang_vel_x</label>
+							<label index="89" size="1" units="um">rotation_about_z_axis</label>
 						</labels>
 						<filename>output00000022_cells.mat</filename>
 					</simplified_data>
